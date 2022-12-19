@@ -126,3 +126,8 @@ airflow standalone
 # Enable the example_bash_operator dag in the home page
 ```
 </details>
+
+## Результаты разработки
+
+![График1](images/result.png)
+

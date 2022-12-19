@@ -1,15 +1,14 @@
 package org.example
 
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.TimestampType
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Properties}
 
 object App {
-  val TIME_SERIES_INTERVAL = 15
+  private var TIME_SERIES_INTERVAL = 15
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
@@ -18,6 +17,13 @@ object App {
       .getOrCreate()
 
     spark.sparkContext.setLogLevel("ERROR")
+
+    TIME_SERIES_INTERVAL = readTable(spark, "settings")
+      .filter(col("key") === "interval_minutes")
+      .select(col("value"))
+      .first()
+      .getString(0)
+      .toInt
 
     // за прошедшие сутки
     val predicates = Array[String]("timestamp between today() - 3 and today()")
