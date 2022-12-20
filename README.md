@@ -38,7 +38,9 @@ https://www.alphavantage.co/
 
 
 
-## Установка окружения
+## План реализации
+
+![График1](images/diagram.drawio.png)
 
 Всё окружение будет устанавливаться на локальной либо на виртуальной машине. В моем случае это
 
@@ -47,11 +49,6 @@ https://www.alphavantage.co/
 - [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - удобен тем, что в нём можно увидеть графический DAG и писать код на Python
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных
 - [ClickHouse 22.11.2](./clickhouse) - быстро делает выборки. Это пригодится для представления vw_time_series, где берутся только уникальные строки
-
-
-## Архитектура
-
-![График1](images/diagram.drawio.png)
 
 ## Схема работы Airflow
 
@@ -131,6 +128,17 @@ airflow standalone
 </details>
 
 ## Результаты разработки
+
+В результате был создан проект со следующей структурой:
+
+```bash
+├── airflow         # исходный код для DAG
+├── clickhouse      # скрипты для clickhouse
+├── docs            # документация, презентация
+├── images          # диаграммы
+└── spark           # исходный код для spark
+```
+Пример витрины данных:
 
 ![График1](images/result.png)
 
