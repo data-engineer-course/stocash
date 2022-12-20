@@ -46,7 +46,7 @@ https://www.alphavantage.co/
 - [Hadoop 3.2.1](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation) - нужно для организации озера данных
 - [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - удобен тем, что в нём можно увидеть графический DAG и писать код на Python
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных
-- [ClickHouse 22.11.2](./docker/clickhouse) - быстро делает выборки. Это пригодится для представления vw_time_series, где берутся только уникальные строки
+- [ClickHouse 22.11.2](./clickhouse) - быстро делает выборки. Это пригодится для представления vw_time_series, где берутся только уникальные строки
 
 
 ## Архитектура
