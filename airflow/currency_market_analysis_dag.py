@@ -23,20 +23,26 @@ class TimeSeriesInterval(Enum):
     MONTHLY = 2
 
 
+class SettingKeys(Enum):
+    INTERVAL_MINUTES = 'interval_minutes'
+    JAR_PATH = 'jar_path'
+    SYMBOLS = 'symbols'
+
+
 def read_settings():
     settings = client.execute("SELECT key, value FROM de.settings")
     for s in settings:
-        if s[0] == 'interval_minutes':
+        if s[0] == SettingKeys.INTERVAL_MINUTES.value:
             interval_minutes = s[1]
-        if s[0] == 'jar_path':
+        if s[0] == SettingKeys.JAR_PATH.value:
             jar_path = s[1]
-        if s[0] == 'symbols':
+        if s[0] == SettingKeys.SYMBOLS.value:
             symbols = s[1]
 
     return {
-        "interval_minutes": interval_minutes,
-        "jar_path": jar_path,
-        "symbols": symbols
+        SettingKeys.INTERVAL_MINUTES.value: interval_minutes,
+        SettingKeys.JAR_PATH.value: jar_path,
+        SettingKeys.SYMBOLS.value: symbols
     }
 
 
@@ -64,7 +70,7 @@ def download_monthly_time_series(**kwargs):
 def download_time_series(interval, ti):
     # получаем список акций
     settings = ti.xcom_pull(task_ids='read_settings')
-    symbols = settings["symbols"].split(",")
+    symbols = settings[SettingKeys.SYMBOLS.value].split(",")
     print(symbols)
 
     # создаем директорию
@@ -76,8 +82,9 @@ def download_time_series(interval, ti):
         data, meta_data = {}, {}
 
         if interval == TimeSeriesInterval.INTRADAY:
-            print(f'{settings["interval_minutes"]}min interval')
-            data, meta_data = time_series.get_intraday(symbol, interval=f'{settings["interval_minutes"]}min')
+            print(f'{settings[SettingKeys.INTERVAL_MINUTES.value]}min interval')
+            data, meta_data = time_series.get_intraday(symbol,
+                                                       interval=f'{settings[SettingKeys.INTERVAL_MINUTES.value]}min')
 
         if interval == TimeSeriesInterval.MONTHLY:
             data, meta_data = time_series.get_monthly(symbol)
@@ -123,10 +130,10 @@ def download_time_series_csv(**kwargs):
     put.communicate()
 
     for symbol in symbols:
-        CSV_URL = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=5min&apikey={os.environ["ALPHAVANTAGE_KEY"]}&datatype=csv'
+        csv_url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=5min&apikey={os.environ["ALPHAVANTAGE_KEY"]}&datatype=csv'
 
         with requests.Session() as s:
-            with open('data.csv', 'wb') as f, requests.get(CSV_URL, stream=True) as r:
+            with open('data.csv', 'wb') as f, requests.get(csv_url, stream=True) as r:
                 for line in r.iter_lines():
                     f.write(line + '\n'.encode())
 
@@ -142,7 +149,7 @@ def download_time_series_csv(**kwargs):
 with DAG(dag_id="currency_market_analysis_dag", start_date=datetime(2022, 1, 1), schedule="0 0 * * *",
          catchup=False) as dag:
     read_settings_python_task = PythonOperator(task_id="read_settings",
-                                              python_callable=read_settings)
+                                               python_callable=read_settings)
 
     choose_interval = BranchPythonOperator(task_id='branch_operator', python_callable=python_branch, do_xcom_push=False)
 
@@ -163,4 +170,4 @@ with DAG(dag_id="currency_market_analysis_dag", start_date=datetime(2022, 1, 1),
     success_bash_task = BashOperator(task_id="success", bash_command="echo Success", do_xcom_push=False)
 
     read_settings_python_task >> choose_interval >> [download_intraday_time_series_python_task,
-                                                    download_monthly_time_series_python_task] >> spark_bash_task >> success_bash_task
+                                                     download_monthly_time_series_python_task] >> spark_bash_task >> success_bash_task
