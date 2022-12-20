@@ -49,6 +49,10 @@ https://www.alphavantage.co/
 - [ClickHouse 22.11.2](./docker/clickhouse) - быстро делает выборки. Это пригодится для представления vw_time_series, где берутся только уникальные строки
 
 
+## Архитектура
+
+![График1](images/diagram.drawio.png)
+
 ## Схема работы
 
 ![График1](images/dag.png)
