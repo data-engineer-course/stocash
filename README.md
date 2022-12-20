@@ -53,7 +53,7 @@ https://www.alphavantage.co/
 
 ![График1](images/diagram.drawio.png)
 
-## Схема работы
+## Схема работы Airflow
 
 ![График1](images/dag.png)
 
