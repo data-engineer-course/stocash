@@ -17,10 +17,6 @@ SELECT `timestamp`, `open`, high, low, `close`, volume, symbol
 FROM de.time_series
 GROUP BY `timestamp`, `open`, high, low, `close`, volume, symbol;
 
-CREATE OR REPLACE TABLE de.symbols (name String) ENGINE = MergeTree ORDER BY name;
-
 CREATE OR REPLACE TABLE de.settings (key String, value String) ENGINE = MergeTree ORDER BY key;
 
-INSERT INTO de.symbols(name) VALUES ('IBM'), ('USD'), ('YNDX'), ('AAPL'), ('GOOGL'), ('MSFT');
-
-INSERT INTO de.settings(key, value) VALUES ('interval_minutes', '15'), ('jar_path', '/task2spark_2.12-0.1.0-SNAPSHOT.jar');
+INSERT INTO de.settings(key, value) VALUES ('symbols', 'IBM,USD,YNDX,AAPL,GOOGL,MSFT'), ('interval_minutes', '15'), ('jar_path', '/task2spark_2.12-0.1.0-SNAPSHOT.jar');

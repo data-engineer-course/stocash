@@ -30,15 +30,13 @@ def read_settings():
             interval_minutes = s[1]
         if s[0] == 'jar_path':
             jar_path = s[1]
+        if s[0] == 'symbols':
+            symbols = s[1]
 
-    result = client.execute('SELECT name FROM de.symbols')
-    symbols = []
-    for t in result:
-        symbols.append(t[0])
     return {
         "interval_minutes": interval_minutes,
         "jar_path": jar_path,
-        "symbols": ",".join(symbols)
+        "symbols": symbols
     }
 
 

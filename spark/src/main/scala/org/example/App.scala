@@ -8,6 +8,10 @@ import java.text.SimpleDateFormat
 import java.util.{Calendar, Properties}
 
 object App {
+  object SettingKeys extends Enumeration {
+    val interval_minutes = Value
+  }
+
   private var TIME_SERIES_INTERVAL = 15
 
   def main(args: Array[String]): Unit = {
@@ -18,15 +22,17 @@ object App {
 
     spark.sparkContext.setLogLevel("ERROR")
 
+    import SettingKeys._
+
     TIME_SERIES_INTERVAL = readTable(spark, "settings")
-      .filter(col("key") === "interval_minutes")
+      .filter(col("key") === interval_minutes.toString)
       .select(col("value"))
       .first()
       .getString(0)
       .toInt
 
     // за прошедшие сутки
-    val predicates = Array[String]("timestamp between today() - 3 and today()")
+    val predicates = Array[String]("timestamp between today() - 1 and today()")
 
     var df = readTable(spark, "vw_time_series", predicates)
 
