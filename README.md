@@ -40,23 +40,23 @@ https://www.alphavantage.co/
 
 ## План реализации
 
-Данные из Alpha Vantage попадают в /bronze папку HDFS, где на неё смотрет ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёть Spark. После всех преобразований готовую витрину Spark кладёт в /gold папку HDFS. Различные настройки для работы приложений хранятся в папке settings в ClickHouse.
+Данные из Alpha Vantage попадают в '/bronze' папку HDFS, где на неё смотрит ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёт Spark. После всех преобразований, готовую витрину Spark кладёт в '/gold' папку HDFS. Различные настройки для работы приложений хранятся в папке settings в ClickHouse.
 
 ![График1](images/diagram.drawio.png)
 
 Всё окружение будет устанавливаться на локальной либо на виртуальной машине. В моем случае это
 
-- [Hadoop 3.2.1](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation) - нужен для организации озера данных. 
+- [Hadoop 3.2.1](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation) - нужен для организации озера данных на основе HDFS. 
 - [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - имеет удобный графический интерфейс и возможность писать код на Python.
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных, лучше чем MapReduce.
 - [ClickHouse 22.11.2](https://clickhouse.com/docs/ru/getting-started/install/) - можно настроить на папку в HDFS как в Hive Metastore. Быстро делает выборки.
 
-ClickHouse пришлось перенастроить на порт 9001, потому что 9000 занят HDFS.
+*(ClickHouse пришлось перенастроить на порт 9001, потому что 9000 занят HDFS)*
 
 Структура хранения данных:
-- Сырой слой данных - папка /bronze в HDFS
+- Сырой слой данных - папка '/bronze' в HDFS
 - Промежуточный слой - таблицы в ClickHouse
-- Слой витрин - папка /gold в HDFS
+- Слой витрин - папка '/gold' в HDFS
 
 ## Схема работы Airflow
 
