@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS de;
+
 CREATE DATABASE IF NOT EXISTS de;
 
 CREATE OR REPLACE TABLE de.time_series (
@@ -8,9 +10,7 @@ CREATE OR REPLACE TABLE de.time_series (
     close Decimal32(4), 
     volume Int32,
     symbol String) 
-ENGINE = MergeTree
-PARTITION BY toYYYYMMDD(timestamp)
-ORDER BY (timestamp, symbol);
+ENGINE=HDFS('hdfs://localhost:9000/bronze/*', 'CSVWithNames');
 
 CREATE OR REPLACE VIEW de.vw_time_series  AS
 SELECT `timestamp`, `open`, high, low, `close`, volume, symbol

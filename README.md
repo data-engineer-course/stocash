@@ -40,25 +40,38 @@ https://www.alphavantage.co/
 
 ## План реализации
 
+Данные из Alpha Vantage попадают в /bronze папку HDFS, где на неё смотрет ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёть Spark. После всех преобразований готовую витрину Spark кладёт в /gold папку HDFS. Различные настройки для работы приложений хранятся в папке settings в ClickHouse.
+
 ![График1](images/diagram.drawio.png)
 
 Всё окружение будет устанавливаться на локальной либо на виртуальной машине. В моем случае это
 
-- [Ubuntu 22.04 LST](https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview)
-- [Hadoop 3.2.1](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation) - нужно для организации озера данных
-- [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - удобен тем, что в нём можно увидеть графический DAG и писать код на Python
-- [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных
-- [ClickHouse 22.11.2](./clickhouse) - быстро делает выборки. Это пригодится для представления vw_time_series, где берутся только уникальные строки
+- [Hadoop 3.2.1](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation) - нужен для организации озера данных. 
+- [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - имеет удобный графический интерфейс и возможность писать код на Python.
+- [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных, лучше чем MapReduce.
+- [ClickHouse 22.11.2](https://clickhouse.com/docs/ru/getting-started/install/) - можно настроить на папку в HDFS как в Hive Metastore. Быстро делает выборки.
+
+ClickHouse пришлось перенастроить на порт 9001, потому что 9000 занят HDFS.
+
+Структура хранения данных:
+- Сырой слой данных - папка /bronze в HDFS
+- Промежуточный слой - таблицы в ClickHouse
+- Слой витрин - папка /gold в HDFS
 
 ## Схема работы Airflow
 
+Скрипты загрузки данных в 2-х режимах:
+ - Инициализирующий – загрузка полного слепка данных источника за месяц
+ - Инкрементальный – загрузка дельты данных за прошедшие сутки
+
 ![График1](images/dag.png)
 
+Описание шагов:
 1. **read_settings** - чтение акций, которые необходимо загрузить и других настроек
 1. **branch_operator** - проверяет значение переменной *time_series_interval*. Если она равна INTRADAY, то будет чтение за один день, в противном случае за месяц.
-1. **download_intraday_time_series** - чтение данных за один день из Alpha Vantage в ClickHouse, и параллельное сохранение бэкапов как json дампы в HDFS папку '/bronze' (на всякий случай)
-1. **download_monthly_time_series** - чтение данных за один месяц из Alpha Vantage в ClickHouse, и параллельное сохранение бэкапов как json дампы в HDFS папку '/bronze' (на всякий случай)
-1. **run_spark** - Spark читает эти данные из ClickHouse, делает преобразования, строит витрину, результат пишетв виде parquet файла в HDFS папку '/gold'
+1. **download_intraday_time_series** - чтение данных за один день из Alpha Vantage в  HDFS папку '/bronze'
+1. **download_monthly_time_series** - чтение данных за один месяц из Alpha Vantage в HDFS папку '/bronze'
+1. **run_spark** - Spark читает эти данные из ClickHouse, строит витрину, результат пишет в виде parquet файла в HDFS папку '/gold'
 1. **success** - сообщение об успешном выполнении задания
 
 
@@ -68,6 +81,8 @@ https://www.alphavantage.co/
 - **settings** - различные настройки приложения
 
 ![График1](images/er.png)
+
+Скрипт иницилизации находится [здесь](./clickhouse/).
 
 
 ## HDFS
@@ -79,14 +94,14 @@ hdfs namenode -format
 start-dfs.sh
 hdfs dfs -mkdir /bronze
 hdfs dfs -mkdir /gold
-hdfs dfsadmin -safemode leave  
+hdfs dfsadmin -safemode leave
 # если нужно остановить, то stop-dfs.sh
 ```
 
 ### Структура
 
 ```bash
-├── bronze      # сырые данные в виде json файлов
+├── bronze      # сырые данные в виде csv файлов
 └── gold        # готовые витрины в виде parquet файлов
 ```
 
@@ -133,10 +148,10 @@ airflow standalone
 
 ```bash
 ├── airflow         # исходный код для DAG
-├── clickhouse      # скрипты для clickhouse
+├── clickhouse      # скрипты для ClickHouse
 ├── docs            # документация, презентация
-├── images          # диаграммы
-└── spark           # исходный код для spark
+├── images          # диаграммы, картинки
+└── spark           # исходный код для Spark
 ```
 Пример витрины данных:
 

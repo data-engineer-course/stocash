@@ -1,8 +1,7 @@
 from datetime import datetime
 import time
-import requests
 import os
-import json
+import csv
 from airflow.models import Variable
 from airflow import DAG
 from airflow.operators.bash import BashOperator
@@ -15,7 +14,7 @@ from alpha_vantage.timeseries import TimeSeries
 from enum import Enum
 
 client = Client(host='localhost', port=9001)
-time_series = TimeSeries(key=os.environ["ALPHAVANTAGE_KEY"])
+time_series = TimeSeries(key=os.environ["ALPHAVANTAGE_KEY"], output_format='csv')
 
 
 class TimeSeriesInterval(Enum):
@@ -30,6 +29,10 @@ class SettingKeys(Enum):
 
 
 def read_settings():
+    interval_minutes = 0
+    jar_path = ''
+    symbols = ''
+
     settings = client.execute("SELECT key, value FROM de.settings")
     for s in settings:
         if s[0] == SettingKeys.INTERVAL_MINUTES.value:
@@ -68,15 +71,10 @@ def download_monthly_time_series(**kwargs):
 
 
 def download_time_series(interval, ti):
-    # получаем список акций
+    # извлекаем список валют/акций
     settings = ti.xcom_pull(task_ids='read_settings')
     symbols = settings[SettingKeys.SYMBOLS.value].split(",")
-    print(symbols)
-
-    # создаем директорию
-    directory = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-    put = Popen(["hadoop", "fs", "-mkdir", f"/bronze/{directory}"], stdin=PIPE, bufsize=-1)
-    put.communicate()
+    print(f'symbols: {symbols}')
 
     for symbol in symbols:
         data, meta_data = {}, {}
@@ -89,61 +87,31 @@ def download_time_series(interval, ti):
         if interval == TimeSeriesInterval.MONTHLY:
             data, meta_data = time_series.get_monthly(symbol)
 
-        save_to_hdfs(directory, data, symbol)
+        csv_file = "data.csv"
 
-        for key in data:
-            datetime_object = datetime.strptime(key, '%Y-%m-%d %H:%M:%S')
-            tms = time.mktime(datetime_object.timetuple())
+        download_csv(csv_file, data, symbol)
 
-            opn = float(data[key]['1. open'])
-            hgh = float(data[key]['2. high'])
-            lw = float(data[key]['3. low'])
-            cls = float(data[key]['4. close'])
-            vlm = int(data[key]['5. volume'])
-
-            query = f"INSERT INTO de.time_series (timestamp, open, high, low, close, volume, symbol) VALUES ({tms}, {opn}, {hgh}, {lw}, {cls}, {vlm}, '{symbol}')"
-            print(query)
-            client.execute(query)
+        save_csv_to_hdfs(csv_file, symbol)
 
 
-def save_to_hdfs(directory, data, symbol):
-    with open('data.json', 'w') as fp:
-        json.dump(data, fp)
+def download_csv(csv_file, csvreader, symbol):
+    with open(f'./{csv_file}', 'w') as f:
+        writer = csv.writer(f, dialect='excel')
+        for idx, row in enumerate(csvreader):
+            if idx == 0:
+                row.append('symbol')
+            else:
+                row.append(symbol)
+            writer.writerow(row)
 
-    from_path = os.path.abspath('./data.json')
-    to_path = f'hdfs://localhost:9000/bronze/{directory}/{symbol}.json'
+
+def save_csv_to_hdfs(csv_file, symbol):
+    from_path = os.path.abspath(f'./{csv_file}')
+    to_path = f'hdfs://localhost:9000/bronze/{round(time.time())}_{symbol}.csv'
     print(f"from path {from_path}")
     print(f"to path {to_path}")
-    put = Popen(["hadoop", "fs", "-rm", to_path], stdin=PIPE, bufsize=-1)
-    put.communicate()
     put = Popen(["hadoop", "fs", "-put", from_path, to_path], stdin=PIPE, bufsize=-1)
     put.communicate()
-
-
-def download_time_series_csv(**kwargs):
-    ti = kwargs['ti']
-    symbols = ti.xcom_pull(task_ids='read_settings')
-    symbols = symbols.split(",")
-
-    directory = datetime.now().strftime("%Y_%m_%d")
-    put = Popen(["hadoop", "fs", "-mkdir", f"/bronze/{directory}"], stdin=PIPE, bufsize=-1)
-    put.communicate()
-
-    for symbol in symbols:
-        csv_url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=5min&apikey={os.environ["ALPHAVANTAGE_KEY"]}&datatype=csv'
-
-        with requests.Session() as s:
-            with open('data.csv', 'wb') as f, requests.get(csv_url, stream=True) as r:
-                for line in r.iter_lines():
-                    f.write(line + '\n'.encode())
-
-        from_path = os.path.abspath('./data.csv')
-        to_path = f'hdfs://localhost:9000/bronze/{directory}/{symbol}.csv'
-        print(f"from path {from_path}")
-        print(f"to path {to_path}")
-
-        put = Popen(["hadoop", "fs", "-put", from_path, to_path], stdin=PIPE, bufsize=-1)
-        put.communicate()
 
 
 with DAG(dag_id="currency_market_analysis_dag", start_date=datetime(2022, 1, 1), schedule="0 0 * * *",
