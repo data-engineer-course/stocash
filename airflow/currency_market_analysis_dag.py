@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 import time
 import os
 import csv
@@ -84,6 +84,10 @@ def download_time_series(interval, ti):
             data, meta_data = time_series.get_intraday(symbol,
                                                        interval=f'{settings[SettingKeys.INTERVAL_MINUTES.value]}min')
 
+            # т.к. Alpha Vantage API не позволяет указать конкретный день,
+            # то тут можно дополнительно фильтровать данные за прошлый день
+            data = filter_dates(data)
+
         if interval == TimeSeriesInterval.MONTHLY:
             data, meta_data = time_series.get_monthly(symbol)
 
@@ -92,6 +96,21 @@ def download_time_series(interval, ti):
         download_csv(csv_file, data, symbol)
 
         save_csv_to_hdfs(csv_file, symbol)
+
+
+def filter_dates(data):
+    result = []
+    for idx, row in enumerate(data):
+        if idx == 0:
+            result.append(row)
+        else:
+            date_object = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').date()
+            today = date.today()
+            delta = today - date_object
+            if delta.days == 1:
+                result.append(row)
+
+    return result
 
 
 def download_csv(csv_file, csvreader, symbol):
