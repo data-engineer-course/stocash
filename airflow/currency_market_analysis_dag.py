@@ -77,7 +77,7 @@ def download_time_series(interval, ti):
     print(f'symbols: {symbols}')
 
     for symbol in symbols:
-        data, meta_data = {}, {}
+        data, meta_data = [], None
 
         if interval == TimeSeriesInterval.INTRADAY:
             print(f'{settings[SettingKeys.INTERVAL_MINUTES.value]}min interval')
