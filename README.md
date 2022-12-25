@@ -53,7 +53,7 @@ https://www.alphavantage.co/
 
 *(ClickHouse пришлось перенастроить на порт 9001, потому что 9000 занят HDFS)*
 
-**ElasticSearch**, **Kibana** и **Grafana** будут браться из [docker-compose.yml](./elasticsearch/)
+ElasticSearch, Kibana и Grafana будут браться из [docker-compose.yml](./elasticsearch/)
 
 Структура хранения данных:
 - Сырой слой данных - папка '/bronze' в HDFS
