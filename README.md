@@ -160,7 +160,7 @@ airflow standalone
 
 ## ElasticSearch, Kibana
 
-Чтобы результаты было удобнее смотреть, Spark так же выгружает данные в ElasticSearch в индекс task2.
+Чтобы результаты было удобнее смотреть, Spark так же выгружает данные в ElasticSearch в индекс **task2**.
 
 Для установки воспользуемся скриптом *docker-compose.yml* из папки [elasticsearch](./elasticsearch/docker-compose.yml)
 
@@ -168,7 +168,7 @@ airflow standalone
 
 ![Docker](images/docker_ps.png)
 
-Зайдем в Kibana и добавим **index pattern** для нашего индекса по полю date нашего индекса task2, который содержит дату котировок
+Зайдем в Kibana и добавим **index pattern** для нашего индекса по полю **date** нашего индекса **task2**, который содержит дату котировок
 
 ![Index pattern](images/elastic_index_pattern.png)
 
@@ -178,5 +178,42 @@ airflow standalone
 
 ## Grafana
 
-Там же витрину можно просмотреть в Grafana. Она устанавливается тем же скриптом, что и ElasticSearch.
+Так же витрину можно просмотреть в Grafana. Она устанавливается тем же скриптом, что и ElasticSearch.
+
+По-умолчанию реквизиты для входа admin/admin.
+
+### ClickHouse
+
+Можно установить плагин для [ClickHouse](https://grafana.com/grafana/plugins/grafana-clickhouse-datasource/), а потом добавить его через *Data sources -> Add data source -> ClickHouse*
+
+| Key | Value |
+| ----------- | ----------- |
+| Server address | host.docker.internal |
+| Server port | 9001 |
+| Username | default |
+| Default database | de |
+
+
+<img src="./images/grafana_clickhouse_add.png" alt="drawing" width="500"/>
+
+На вкладке **Dashboards** можно импортировать разные красивые дашборды.
+
+![ClickHouse](./images/grafana_clickhouse_dashboards.png)
+
+Например **Query Analysis**
+
+![ClickHouse](./images/grafana_query_analysis.png)
+
+### ElasticSearch
+
+А можно брать данные из **ElasticSearch**. Добавляется так же через *Data sources -> Add data source -> Elasticsearch*
+
+ Key | Value |
+| ----------- | ----------- |
+| URL | http://elasticsearch:9200 |
+| Index name | task2 |
+| Time field name | date |
+| ElasticSearch version | 7.10+ |
+
+<img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
 
