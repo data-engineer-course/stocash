@@ -150,10 +150,33 @@ airflow standalone
 ├── airflow         # исходный код для DAG
 ├── clickhouse      # скрипты для ClickHouse
 ├── docs            # документация, презентация
+├── elasticsearch   # скрипты для elasticsearch
 ├── images          # диаграммы, картинки
 └── spark           # исходный код для Spark
 ```
 Пример витрины данных:
 
-![График1](images/result.png)
+![Результат](images/result.png)
+
+## ElasticSearch, Kibana
+
+Чтобы результаты было удобнее смотреть, Spark так же выгружает данные в ElasticSearch в индекс task2.
+
+Для установки воспользуемся скриптом *docker-compose.yml* из папки [elasticsearch](./elasticsearch/docker-compose.yml)
+
+В результате получим
+
+![Docker](images/docker_ps.png)
+
+Зайдем в Kibana и добавим **index pattern** для нашего индекса по полю date нашего индекса task2, который содержит дату котировок
+
+![Index pattern](images/elastic_index_pattern.png)
+
+После этого данные из меню Discover можно сортировать по всем полям. Например, посмотрим данные за последние пять дней
+
+![Discover](images/elastic_discover.png)
+
+## Grafana
+
+Там же витрину можно просмотреть в Grafana. Она устанавливается тем же скриптом, что и ElasticSearch.
 

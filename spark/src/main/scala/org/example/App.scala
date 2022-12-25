@@ -2,7 +2,9 @@ package org.example
 
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.elasticsearch.spark.sql.sparkDatasetFunctions
 
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Properties}
@@ -17,6 +19,9 @@ object App {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
       .master("local[1]")
+      .config("es.index.auto.create", "true")
+      .config("es.mapping.date.rich", "true")
+      .config("spark.es.nodes.wan.only","true") // for Docker
       .appName("SparkByExample")
       .getOrCreate()
 
@@ -32,7 +37,8 @@ object App {
       .toInt
 
     // за прошедшие сутки
-    val predicates = Array[String]("timestamp between today() - 1 and today()")
+    val daysToSubtract = 1;
+    val predicates = Array[String](s"timestamp between today() - $daysToSubtract and today() - ${daysToSubtract - 1}")
 
     var df = readTable(spark, "vw_time_series", predicates)
 
@@ -87,6 +93,7 @@ object App {
       first("first_max_volume").as("first_max_volume"),
       first("first_max_close").as("first_max_close"),
       first("first_min_close").as("first_min_close"),
+      first(from_unixtime(unix_timestamp(col("timestamp"), "yyyy-MM-dd HH:mm:ss"), "yyyy-MM-dd")).as("date")
     )
 
     // превратим в интервалы
@@ -122,9 +129,20 @@ object App {
     val format = new SimpleDateFormat("yyyy_MM_dd__H_m_s")
     val directory = format.format(Calendar.getInstance().getTime())
 
-    saveResult(df, directory)
+    saveToHDFS(df, directory)
+
+    saveToElasticSearch(df)
   }
 
+  private def saveToElasticSearch(df: DataFrame): Unit = {
+    // ElasticSearch плохо работает с decimal
+    val result = df
+      .withColumn("opening_rate",col("opening_rate").cast(DoubleType))
+      .withColumn("closing_rate",col("closing_rate").cast(DoubleType))
+      .withColumn("percent_diff",col("percent_diff").cast(DoubleType))
+
+    result.saveToEs("task2")
+  }
   private def readTable(spark: SparkSession, table: String, predicates: Array[String] = null): DataFrame = {
     val jdbcUrl = "jdbc:clickhouse://localhost:8123/de"
     val opts: collection.Map[String, String] = collection.Map("driver" -> "ru.yandex.clickhouse.ClickHouseDriver")
@@ -137,11 +155,11 @@ object App {
       spark.read.options(opts).jdbc(jdbcUrl, table = table, ckProperties)
   }
 
-  private def saveResult(df: DataFrame, directory: String): Unit = {
+  private def saveToHDFS(df: DataFrame, directory: String): Unit = {
     df.write.parquet(s"hdfs://localhost:9000/gold/$directory.parquet")
   }
 
-  private def readDirectory(spark: SparkSession, directory: String): DataFrame = {
+  private def readFromHDFS(spark: SparkSession, directory: String): DataFrame = {
     spark.read
       .option("header", true)
       .csv(s"hdfs://localhost:9000/bronze/$directory")
