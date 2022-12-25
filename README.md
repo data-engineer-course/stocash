@@ -40,7 +40,7 @@ https://www.alphavantage.co/
 
 ## План реализации
 
-Данные из Alpha Vantage попадают в '/bronze' папку HDFS, где на неё смотрит ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёт Spark. После всех преобразований, готовую витрину Spark кладёт в '/gold' папку HDFS. Различные настройки для работы приложений хранятся в папке settings в ClickHouse.
+Данные из Alpha Vantage попадают в '/bronze' папку HDFS, где на неё смотрит ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёт Spark. После всех преобразований, готовую витрину Spark кладёт в '/gold' папку HDFS и ElasticSearch. Различные настройки для работы приложений хранятся в папке settings в ClickHouse.
 
 ![График1](images/diagram.drawio.png)
 
@@ -200,7 +200,7 @@ airflow standalone
 
 ![ClickHouse](./images/grafana_clickhouse_dashboards.png)
 
-Например **Query Analysis**
+Например, **Query Analysis**
 
 ![ClickHouse](./images/grafana_query_analysis.png)
 
@@ -217,3 +217,6 @@ airflow standalone
 
 <img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
 
+Если нажать снизу на кнопку **Explore**, то видно, что, например, за 22 и 23 декабря было выгзужена информация по четырём акциям/валютам
+
+![ClickHouse](./images/grafana_dashboard1.png)
