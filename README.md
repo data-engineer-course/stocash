@@ -217,6 +217,6 @@ airflow standalone
 
 <img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
 
-Если нажать снизу на кнопку **Explore**, то видно, что, например, за 22 и 23 декабря было выгзужена информация по четырём акциям/валютам
+Если нажать снизу на кнопку **Explore**, то видно, что, например, за 22 и 23 декабря была выгружена информация по четырём акциям/валютам
 
 ![ClickHouse](./images/grafana_dashboard1.png)
