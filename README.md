@@ -73,7 +73,7 @@ https://www.alphavantage.co/
 1. **branch_operator** - проверяет значение переменной *time_series_interval*. Если она равна INTRADAY, то будет чтение за один день, в противном случае за месяц.
 1. **download_intraday_time_series** - чтение данных за один день из Alpha Vantage в  HDFS папку '/bronze'
 1. **download_monthly_time_series** - чтение данных за один месяц из Alpha Vantage в HDFS папку '/bronze'
-1. **run_spark** - Spark читает эти данные из ClickHouse, строит витрину, результат пишет в виде parquet файла в HDFS папку '/gold'
+1. **run_spark** - Spark читает эти данные из ClickHouse, строит витрину, результат пишет в виде parquet файла в HDFS папку '/gold' и индекс task2 в ElasticSearch
 1. **success** - сообщение об успешном выполнении задания
 
 
