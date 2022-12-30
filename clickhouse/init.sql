@@ -19,4 +19,4 @@ GROUP BY `timestamp`, `open`, high, low, `close`, volume, symbol;
 
 CREATE OR REPLACE TABLE de.settings (key String, value String) ENGINE = MergeTree ORDER BY key;
 
-INSERT INTO de.settings(key, value) VALUES ('symbols', 'IBM,USD,YNDX,AAPL,GOOGL,MSFT'), ('interval_minutes', '15'), ('jar_path', '/task2spark_2.12-0.1.0-SNAPSHOT.jar');
+INSERT INTO de.settings(key, value) VALUES ('symbols', 'IBM,USD,YNDX,AAPL,GOOGL,MSFT'), ('interval_minutes', '15'), ('jar_path', '/task2spark_2.12-0.1.0-SNAPSHOT.jar'), ('object_storage', 'hdfs');

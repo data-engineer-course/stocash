@@ -13,6 +13,14 @@ from clickhouse_driver import Client
 from alpha_vantage.timeseries import TimeSeries
 from enum import Enum
 
+import boto3
+
+# for test
+os.environ['AWS_ACCESS_KEY_ID'] = ""
+os.environ['AWS_SECRET_ACCESS_KEY'] = ""
+os.environ["ALPHAVANTAGE_KEY"] = ""
+
+s3 = boto3.resource('s3', endpoint_url="http://127.0.0.1:9010")
 client = Client(host='localhost', port=9001)
 time_series = TimeSeries(key=os.environ["ALPHAVANTAGE_KEY"], output_format='csv')
 
@@ -26,27 +34,22 @@ class SettingKeys(Enum):
     INTERVAL_MINUTES = 'interval_minutes'
     JAR_PATH = 'jar_path'
     SYMBOLS = 'symbols'
+    OBJECT_STORAGE = 'object_storage'
 
 
 def read_settings():
-    interval_minutes = 0
-    jar_path = ''
-    symbols = ''
+    result = {
+        SettingKeys.INTERVAL_MINUTES.value: 0,
+        SettingKeys.JAR_PATH.value: '',
+        SettingKeys.SYMBOLS.value: '',
+        SettingKeys.OBJECT_STORAGE.value: ''
+    }
 
     settings = client.execute("SELECT key, value FROM de.settings")
     for s in settings:
-        if s[0] == SettingKeys.INTERVAL_MINUTES.value:
-            interval_minutes = s[1]
-        if s[0] == SettingKeys.JAR_PATH.value:
-            jar_path = s[1]
-        if s[0] == SettingKeys.SYMBOLS.value:
-            symbols = s[1]
+        result[s[0]] = s[1]
 
-    return {
-        SettingKeys.INTERVAL_MINUTES.value: interval_minutes,
-        SettingKeys.JAR_PATH.value: jar_path,
-        SettingKeys.SYMBOLS.value: symbols
-    }
+    return result
 
 
 def python_branch():
@@ -95,7 +98,10 @@ def download_time_series(interval, ti):
 
         download_csv(csv_file, data, symbol)
 
-        save_csv_to_hdfs(csv_file, symbol)
+        if settings[SettingKeys.OBJECT_STORAGE.value].lower == 'hdfs':
+            save_csv_to_hdfs(csv_file, symbol)
+        else:
+            save_csv_to_s3(csv_file, symbol)
 
 
 def filter_dates(data):
@@ -126,11 +132,18 @@ def download_csv(csv_file, csvreader, symbol):
 
 def save_csv_to_hdfs(csv_file, symbol):
     from_path = os.path.abspath(f'./{csv_file}')
-    to_path = f'hdfs://localhost:9000/bronze/{round(time.time())}_{symbol}.csv'
+    file_name = f'{round(time.time())}_{symbol}.csv'
+    to_path = f'hdfs://localhost:9000/bronze/{file_name}'
     print(f"from path {from_path}")
     print(f"to path {to_path}")
     put = Popen(["hadoop", "fs", "-put", from_path, to_path], stdin=PIPE, bufsize=-1)
     put.communicate()
+
+
+def save_csv_to_s3(csv_file, symbol):
+    from_path = os.path.abspath(f'./{csv_file}')
+    file_name = f'{round(time.time())}_{symbol}.csv'
+    s3.Object('my-s3bucket', f'/bronze/{file_name}').put(Body=open(from_path, 'rb'))
 
 
 with DAG(dag_id="currency_market_analysis_dag", start_date=datetime(2022, 1, 1), schedule="0 0 * * *",

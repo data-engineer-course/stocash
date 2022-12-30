@@ -107,6 +107,22 @@ hdfs dfsadmin -safemode leave
 └── gold        # готовые витрины в виде parquet файлов
 ```
 
+## S3
+
+Вместо HDFS можно использовать S3. Для этого будем использовать MinIO. Настройки по развертыванию находятся в [docker-compose.yaml](./s3/)
+
+После запуска, зайдем по адресу http://localhost:9011/ и в меню слева выберем пункт **Buckets**. Создадим новый bucket, назовём его **my-s3bucket**. После этого, выберем слева пункт **Access Keys** и создадим пару Access Key/Secret Key. Эти ключи нам понадобятся при создании таблицы **time_series_s3**.
+
+![Buckets](./images/minio_buckets.png)
+
+![Access Keys](./images/minio_access_keys.png)
+
+Чтобы добавить таблицу **time_series_s3**, необходимо в файле [init.sql](./s3/) подставить Access Key и Secret Key и прогнать этот скрипт. Он добавит новую таблицу и изменит параметр object_storage. В зависимости от этого параметра Airflow будет созранять результат либо в HDFS, либо в S3.
+
+После этого, можно будет перенастроить текущее представление **vw_time_series** на новую таблицу.
+
+Так же в DAG нужно будет указать эти ключи для доступа к S3.
+
 
 ## Airflow
 
@@ -114,6 +130,7 @@ hdfs dfsadmin -safemode leave
 - clickhouse_driver
 - apache-airflow
 - alpha_vantage
+- boto3
 
 <details>
   <summary>Инициализация</summary>
