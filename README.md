@@ -111,7 +111,7 @@ hdfs dfsadmin -safemode leave
 
 Вместо HDFS можно использовать S3. Для этого будем использовать MinIO. Настройки по развертыванию находятся в [docker-compose.yaml](./s3/)
 
-После запуска, зайдем по адресу http://localhost:9011/ и в меню слева выберем пункт **Buckets**. Создадим новый bucket, назовём его **my-s3bucket**. После этого, выберем слева пункт **Access Keys** и создадим пару Access Key/Secret Key. Эти ключи нам понадобятся при создании таблицы **time_series_s3**.
+После запуска перейдем по адресу http://localhost:9011/, авторизуемся *airflow/airflowpass* и в меню слева выберем пункт **Buckets**. Создадим новый bucket, назовём его **my-s3bucket**. После этого, выберем слева пункт **Access Keys** и создадим пару Access Key/Secret Key. Эти ключи нам понадобятся при создании таблицы **time_series_s3**.
 
 ![Buckets](./images/minio_buckets.png)
 
