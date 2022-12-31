@@ -6,7 +6,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "3.3.1",
   "org.apache.spark" %% "spark-sql" % "3.3.1",
   "ru.yandex.clickhouse" % "clickhouse-jdbc" % "0.3.2",
-  "org.elasticsearch" %% "elasticsearch-spark-20" % "7.17.7"
+  "org.elasticsearch" %% "elasticsearch-spark-20" % "7.17.7",
+  "org.apache.hadoop" % "hadoop-aws" % "3.2.2",
 )
 
 lazy val root = (project in file("."))

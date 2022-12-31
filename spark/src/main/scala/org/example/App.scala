@@ -5,42 +5,46 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.elasticsearch.spark.sql.sparkDatasetFunctions
+import com.amazonaws.SDKGlobalConfiguration
 
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Properties}
 
 object App {
-  object SettingKeys extends Enumeration {
+  private object SettingKeys extends Enumeration {
     val interval_minutes = Value
+    val object_storage = Value
+  }
+
+  private object ObjectStorage extends Enumeration {
+    val hdfs = Value
+    val s3 = Value
   }
 
   private var TIME_SERIES_INTERVAL = 15
+  private var OBJECT_STORAGE = ObjectStorage.hdfs
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
       .master("local[1]")
       .config("es.index.auto.create", "true")
       .config("es.mapping.date.rich", "true")
-      .config("spark.es.nodes.wan.only","true") // for Docker
+      .config("spark.es.nodes.wan.only", "true") // for Docker
       .appName("SparkByExample")
       .getOrCreate()
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    import SettingKeys._
+    configureS3(spark)
 
-    TIME_SERIES_INTERVAL = readTable(spark, "settings")
-      .filter(col("key") === interval_minutes.toString)
-      .select(col("value"))
-      .first()
-      .getString(0)
-      .toInt
+    readSettings(spark)
 
     // за прошедшие сутки
     val daysToSubtract = 1;
     val predicates = Array[String](s"timestamp between today() - $daysToSubtract and today() - ${daysToSubtract - 1}")
 
-    var df = readTable(spark, "vw_time_series", predicates)
+    //var df = readTable(spark, "vw_time_series", predicates)
+    var df = readTable(spark, "vw_time_series")
 
     df.printSchema()
 
@@ -126,23 +130,70 @@ object App {
 
     df.show(false)
 
-    val format = new SimpleDateFormat("yyyy_MM_dd__H_m_s")
+    val format = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss")
     val directory = format.format(Calendar.getInstance().getTime())
 
-    saveToHDFS(df, directory)
+    import ObjectStorage._
+
+    if (OBJECT_STORAGE == hdfs)
+      saveToHDFS(df, directory)
+    else
+      saveToS3(df, directory)
 
     saveToElasticSearch(df)
+  }
+
+  private def readSettings(spark: SparkSession): Unit = {
+    val settings = readTable(spark, "settings");
+
+    implicit def stringToObjectStorage(objectStorage: String): ObjectStorage.Value = ObjectStorage.values.find(_.toString == objectStorage).get
+
+    import SettingKeys._
+
+    TIME_SERIES_INTERVAL = settings
+      .filter(col("key") === interval_minutes.toString)
+      .select(col("value"))
+      .first()
+      .getString(0)
+      .toInt
+
+
+    OBJECT_STORAGE = settings
+      .filter(col("key") === object_storage.toString)
+      .select(col("value"))
+      .first()
+      .getString(0)
+  }
+
+  private def configureS3(spark: SparkSession): Unit = {
+    System.setProperty(SDKGlobalConfiguration.DISABLE_CERT_CHECKING_SYSTEM_PROPERTY, "true")
+
+    val s3accessKeyAws = ""
+    val s3secretKeyAws = ""
+    val connectionTimeOut = "600000"
+    val s3endPointLoc: String = "http://127.0.0.1:9010"
+
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.endpoint", s3endPointLoc)
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.access.key", s3accessKeyAws)
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.secret.key", s3secretKeyAws)
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.connection.timeout", connectionTimeOut)
+    spark.sparkContext.hadoopConfiguration.set("spark.sql.debug.maxToStringFields", "100")
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.path.style.access", "true")
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.connection.ssl.enabled", "true")
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
   }
 
   private def saveToElasticSearch(df: DataFrame): Unit = {
     // ElasticSearch плохо работает с decimal
     val result = df
-      .withColumn("opening_rate",col("opening_rate").cast(DoubleType))
-      .withColumn("closing_rate",col("closing_rate").cast(DoubleType))
-      .withColumn("percent_diff",col("percent_diff").cast(DoubleType))
+      .withColumn("opening_rate", col("opening_rate").cast(DoubleType))
+      .withColumn("closing_rate", col("closing_rate").cast(DoubleType))
+      .withColumn("percent_diff", col("percent_diff").cast(DoubleType))
 
     result.saveToEs("task2")
   }
+
   private def readTable(spark: SparkSession, table: String, predicates: Array[String] = null): DataFrame = {
     val jdbcUrl = "jdbc:clickhouse://localhost:8123/de"
     val opts: collection.Map[String, String] = collection.Map("driver" -> "ru.yandex.clickhouse.ClickHouseDriver")
@@ -153,6 +204,11 @@ object App {
       spark.read.options(opts).jdbc(jdbcUrl, table = table, predicates, ckProperties)
     else
       spark.read.options(opts).jdbc(jdbcUrl, table = table, ckProperties)
+  }
+
+  private def saveToS3(df: DataFrame, directory: String): Unit = {
+    val outputPath = s"s3a://my-s3bucket/gold/$directory.parquet"
+    df.write.mode("overwrite").parquet(outputPath)
   }
 
   private def saveToHDFS(df: DataFrame, directory: String): Unit = {
