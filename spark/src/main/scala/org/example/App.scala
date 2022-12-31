@@ -168,8 +168,8 @@ object App {
   private def configureS3(spark: SparkSession): Unit = {
     System.setProperty(SDKGlobalConfiguration.DISABLE_CERT_CHECKING_SYSTEM_PROPERTY, "true")
 
-    val s3accessKeyAws = "pnPnSD6URaW1IyoB"
-    val s3secretKeyAws = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
+    val s3accessKeyAws = ""
+    val s3secretKeyAws = ""
     val connectionTimeOut = "600000"
     val s3endPointLoc: String = "http://127.0.0.1:9010"
 

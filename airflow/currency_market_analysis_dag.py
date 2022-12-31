@@ -16,9 +16,9 @@ from enum import Enum
 import boto3
 
 # for test
-os.environ['AWS_ACCESS_KEY_ID'] = "pnPnSD6URaW1IyoB"
-os.environ['AWS_SECRET_ACCESS_KEY'] = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
-os.environ["ALPHAVANTAGE_KEY"] = "3W9T6S0SUX2HUMJB"
+os.environ['AWS_ACCESS_KEY_ID'] = ""
+os.environ['AWS_SECRET_ACCESS_KEY'] = ""
+os.environ["ALPHAVANTAGE_KEY"] = ""
 
 s3 = boto3.resource('s3', endpoint_url="http://127.0.0.1:9010")
 client = Client(host='localhost', port=9001)
