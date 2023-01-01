@@ -84,7 +84,9 @@ ElasticSearch, Kibana и Grafana будут браться из [docker-compose.
 
 ![График1](images/er.png)
 
-Скрипт иницилизации находится [здесь](./clickhouse/).
+Скрипт иницилизации [init.sql](./clickhouse/init.sql).
+
+*(Если представление vw_time_series будет долго группировать, то можно попробовать создать таблицу на основе ReplacingMergeTree, где будут только уникальные значения по ключу. Пример такого скрипта [replace_view.sql](./clickhouse/replace_view.sql))* 
 
 
 ## HDFS

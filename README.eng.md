@@ -84,7 +84,9 @@ Description of steps:
 
 ![Chart1](images/er.png)
 
-The initialization script is located [here](./clickhouse/).
+Initialization script [init.sql](./clickhouse/init.sql).
+
+*(If the vw_time_series view will group for a long time, then you can try to create a table based on ReplacingMergeTree, where there will be only unique values by key. An example of such a script is [replace_view.sql](./clickhouse/replace_view.sql))*
 
 ## HDFS
 
