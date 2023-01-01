@@ -176,6 +176,7 @@ airflow standalone
 ├── docs            # документация, презентация
 ├── elasticsearch   # скрипты для elasticsearch
 ├── images          # диаграммы, картинки
+├── s3              # скрипты для S3
 └── spark           # исходный код для Spark
 ```
 Пример витрины данных:
@@ -221,7 +222,6 @@ airflow standalone
 | Server port | 9001 |
 | Username | default |
 | Default database | de |
-
 
 На вкладке **Dashboards** можно импортировать разные красивые дашборды. Например, **Query Analysis**
 

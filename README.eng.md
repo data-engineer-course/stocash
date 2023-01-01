@@ -112,9 +112,14 @@ You can use S3 instead of HDFS. For this we will use MinIO. Deployment settings 
 
 After starting, go to http://localhost:9011/, log in *airflow/airflowpass* and select **Buckets** in the menu on the left. Let's create a new bucket, let's call it **my-s3bucket**. After that, select the **Access Keys** item on the left and create an Access Key/Secret Key pair. We will need these keys when creating the **time_series_s3** table.
 
+<details>
+  <summary>Screenshots</summary>
+
 ![Buckets](./images/minio_buckets.png)
 
 ![Access Keys](./images/minio_access_keys.png)
+
+</details>
 
 To add the **time_series_s3** table, you need to substitute the Access Key and Secret Key in the [init.sql](./s3/) file and run this script. It will add a new table and change the object_storage parameter. Depending on this parameter, Airflow will store the result either in HDFS or in S3.
 
@@ -170,6 +175,7 @@ As a result, a project was created with the following structure:
 ├── docs            # documentation, presentation
 ├── elasticsearch   # scripts for elasticsearch
 ├── images          # diagrams, pictures
+├── s3              # scripts for S3
 └── spark           # source code for Spark
 ```
 Data mart example:
@@ -188,11 +194,16 @@ As a result, we get
 
 Let's go to Kibana and add **index pattern** for our index on the **date** field of our **task2** index, which contains the quote date
 
-![Index pattern](images/elastic_index_pattern.png)
-
 The data from the Discover menu can then be sorted by all fields. For example, let's look at the data for the last five days
 
+<details>
+  <summary>Screenshots</summary>
+
+![Index pattern](images/elastic_index_pattern.png)
+
 ![Discover](images/elastic_discover.png)
+
+</details>
 
 ## Grafana
 
@@ -211,16 +222,18 @@ You can install the plugin for [ClickHouse](https://grafana.com/grafana/plugins/
 | Username | default |
 | Default database | de |
 
+On the **Dashboards** tab, you can import various beautiful dashboards. For example, **Query Analysis**
+
+<details>
+  <summary>Screenshots</summary>
 
 <img src="./images/grafana_clickhouse_add.png" alt="drawing" width="500"/>
 
-On the **Dashboards** tab, you can import various beautiful dashboards.
-
 ![ClickHouse](./images/grafana_clickhouse_dashboards.png)
 
-For example, **Query Analysis**
-
 ![ClickHouse](./images/grafana_query_analysis.png)
+
+</details>
 
 ### Elasticsearch
 
@@ -233,8 +246,13 @@ And you can take data from **ElasticSearch**. It is also added via *Data sources
 | Time field name | date |
 | ElasticSearch version | 7.10+ |
 
-<img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
-
 If you click on the **Explore** button below, you can see that, for example, on December 22 and 23, information on four stocks/currencies was uploaded
 
+<details>
+  <summary>Screenshots</summary>
+
+<img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
+
 ![ClickHouse](./images/grafana_dashboard1.png)
+
+</details>
