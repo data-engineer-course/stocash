@@ -113,9 +113,14 @@ hdfs dfsadmin -safemode leave
 
 После запуска перейдем по адресу http://localhost:9011/, авторизуемся *airflow/airflowpass* и в меню слева выберем пункт **Buckets**. Создадим новый bucket, назовём его **my-s3bucket**. После этого, выберем слева пункт **Access Keys** и создадим пару Access Key/Secret Key. Эти ключи нам понадобятся при создании таблицы **time_series_s3**.
 
+<details>
+  <summary>Screenshots</summary>
+
 ![Buckets](./images/minio_buckets.png)
 
 ![Access Keys](./images/minio_access_keys.png)
+
+</details>
 
 Чтобы добавить таблицу **time_series_s3**, необходимо в файле [init.sql](./s3/) подставить Access Key и Secret Key и прогнать этот скрипт. Он добавит новую таблицу и изменит параметр object_storage. В зависимости от этого параметра Airflow будет сохранять результат либо в HDFS, либо в S3.
 
@@ -189,11 +194,16 @@ airflow standalone
 
 Зайдем в Kibana и добавим **index pattern** для нашего индекса по полю **date** нашего индекса **task2**, который содержит дату котировок
 
-![Index pattern](images/elastic_index_pattern.png)
-
 После этого данные из меню Discover можно сортировать по всем полям. Например, посмотрим данные за последние пять дней
 
+<details>
+  <summary>Screenshots</summary>
+
+![Index pattern](images/elastic_index_pattern.png)
+
 ![Discover](images/elastic_discover.png)
+
+</details>
 
 ## Grafana
 
@@ -213,15 +223,18 @@ airflow standalone
 | Default database | de |
 
 
-<img src="./images/grafana_clickhouse_add.png" alt="drawing" width="500"/>
+На вкладке **Dashboards** можно импортировать разные красивые дашборды. Например, **Query Analysis**
 
-На вкладке **Dashboards** можно импортировать разные красивые дашборды.
+<details>
+  <summary>Screenshots</summary>
+
+<img src="./images/grafana_clickhouse_add.png" alt="drawing" width="500"/>
 
 ![ClickHouse](./images/grafana_clickhouse_dashboards.png)
 
-Например, **Query Analysis**
-
 ![ClickHouse](./images/grafana_query_analysis.png)
+
+</details>
 
 ### ElasticSearch
 
@@ -234,8 +247,13 @@ airflow standalone
 | Time field name | date |
 | ElasticSearch version | 7.10+ |
 
-<img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
-
 Если нажать снизу на кнопку **Explore**, то видно, что, например, за 22 и 23 декабря была выгружена информация по четырём акциям/валютам
 
+<details>
+  <summary>Screenshots</summary>
+
+<img src="./images/grafana_elasticsearch_add.png" alt="drawing" width="500"/>
+
 ![ClickHouse](./images/grafana_dashboard1.png)
+
+</details>
