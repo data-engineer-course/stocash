@@ -87,8 +87,8 @@ def download_time_series(interval, ti):
             data, meta_data = time_series.get_intraday(symbol,
                                                        interval=f'{settings[SettingKeys.INTERVAL_MINUTES.value]}min')
 
-            # т.к. Alpha Vantage API не позволяет указать конкретный день,
-            # то тут можно дополнительно фильтровать данные за прошлый день
+            # because Alpha Vantage API does not allow you to specify a specific day, 
+            # here you can additionally filter the data for the past day
             data = filter_dates(data)
 
         if interval == TimeSeriesInterval.MONTHLY:

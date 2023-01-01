@@ -39,7 +39,7 @@ object App {
 
     readSettings(spark)
 
-    // за прошедшие сутки
+    // over the past day
     val daysToSubtract = 1;
     val predicates = Array[String](s"timestamp between today() - $daysToSubtract and today() - ${daysToSubtract - 1}")
 
@@ -80,14 +80,14 @@ object App {
 
     df.show()
 
-    //    Название валюты
-    //    Суммарный объем торгов за последние сутки
-    //    Курс валюты на момент открытия торгов для данных суток
-    //    Курс валюты на момент закрытия торгов для данных суток
-    //    Разница(в %) курса с момента открытия до момента закрытия торгов для данных суток
-    //    Минимальный временной интервал, на котором был зафиксирован самый крупный объем торгов для данных суток
-    //    Минимальный временной интервал, на котором был зафиксирован максимальный курс для данных суток
-    //    Минимальный временной интервал, на котором был зафиксирован минимальный курс торгов для данных суток
+     // Currency name
+     // Total trading volume for the last day
+     // The exchange rate at the moment of trading opening for the given day
+     // Currency exchange rate at the moment of trading closing for the given day
+     // Difference (in %) of the exchange rate from the moment of opening to the moment of closing of trading for the given day
+     // The minimum time interval on which the largest trading volume for the given day was recorded
+     // The minimum time interval at which the maximum rate was fixed for the given day
+     // The minimum time interval on which the minimum trading rate was fixed for the given day
 
     df = df.groupBy("symbol").agg(
       sum("volume").as("total_volume"),
@@ -100,7 +100,7 @@ object App {
       first(from_unixtime(unix_timestamp(col("timestamp"), "yyyy-MM-dd HH:mm:ss"), "yyyy-MM-dd")).as("date")
     )
 
-    // превратим в интервалы
+    // turn into intervals
     df = df
       .withColumn("first_max_volume_minutes_added", col("first_max_volume") + expr(s"INTERVAL $TIME_SERIES_INTERVAL minutes"))
       .withColumn("first_max_volume_minutes_sub", col("first_max_volume") - expr(s"INTERVAL $TIME_SERIES_INTERVAL minutes"))
@@ -185,7 +185,7 @@ object App {
   }
 
   private def saveToElasticSearch(df: DataFrame): Unit = {
-    // ElasticSearch плохо работает с decimal
+    // ElasticSearch doesn't work well with decimal
     val result = df
       .withColumn("opening_rate", col("opening_rate").cast(DoubleType))
       .withColumn("closing_rate", col("closing_rate").cast(DoubleType))
