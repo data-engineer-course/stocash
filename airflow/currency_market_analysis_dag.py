@@ -74,7 +74,7 @@ def download_monthly_time_series(**kwargs):
 
 
 def download_time_series(interval, ti):
-    # извлекаем список валют/акций
+    # retrieve list of currencies
     settings = ti.xcom_pull(task_ids='read_settings')
     symbols = settings[SettingKeys.SYMBOLS.value].split(",")
     print(f'symbols: {symbols}')
