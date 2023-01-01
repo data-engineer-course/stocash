@@ -1,56 +1,57 @@
 package org.example
 
+import com.amazonaws.SDKGlobalConfiguration
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.DoubleType
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.elasticsearch.spark.sql.sparkDatasetFunctions
-import com.amazonaws.SDKGlobalConfiguration
 
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Properties}
+import java.util.Calendar
 
 object App {
-  private object SettingKeys extends Enumeration {
-    val interval_minutes = Value
-    val object_storage = Value
-  }
-
-  private object ObjectStorage extends Enumeration {
-    val hdfs = Value
-    val s3 = Value
-  }
+  private val saveToObjectStorage = Map[ObjectStorage.Value, (DataFrame, String) => Unit](
+    ObjectStorage.hdfs -> Utils.saveToHDFS,
+    ObjectStorage.s3 -> Utils.saveToS3,
+    ObjectStorage.elastic_search -> Utils.saveToElasticSearch)
 
   private var TIME_SERIES_INTERVAL = 15
   private var OBJECT_STORAGE = ObjectStorage.hdfs
 
+  private val s3accessKeyAws = ""
+  private val s3secretKeyAws = ""
+  private val s3connectionTimeOut = "600000"
+  private val s3endPointLoc: String = "http://127.0.0.1:9010"
+
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder()
-      .master("local[1]")
-      .config("es.index.auto.create", "true")
-      .config("es.mapping.date.rich", "true")
-      .config("spark.es.nodes.wan.only", "true") // for Docker
-      .appName("SparkByExample")
-      .getOrCreate()
 
-    spark.sparkContext.setLogLevel("ERROR")
+    val spark = buildSparkSession()
 
-    configureS3(spark)
+    implicit def stringToObjectStorage(objectStorage: String): ObjectStorage.Value = ObjectStorage.values.find(_.toString == objectStorage).get
 
-    readSettings(spark)
+    implicit def stringToInt(str: String) = str.toInt
 
-    // over the past day
-    val daysToSubtract = 1;
-    val predicates = Array[String](s"timestamp between today() - $daysToSubtract and today() - ${daysToSubtract - 1}")
+    val map = Utils.readSettings(spark)
+    TIME_SERIES_INTERVAL = map(SettingKey.interval_minutes)
+    OBJECT_STORAGE = map(SettingKey.object_storage)
 
-    //var df = readTable(spark, "vw_time_series", predicates)
-    var df = readTable(spark, "vw_time_series")
+    var df = extract(spark)
 
     df.printSchema()
 
     df.show()
 
+    df = transform(df)
+
+    df.show(false)
+
+    load(df)
+  }
+
+  private def transform(source: DataFrame): DataFrame = {
+    var df = source
+
     val windowSpec = Window.partitionBy("symbol")
+
     df = df
       .withColumn("min_timestamp", min("timestamp").over(windowSpec))
       .withColumn("max_timestamp", max("timestamp").over(windowSpec))
@@ -80,14 +81,14 @@ object App {
 
     df.show()
 
-     // Currency name
-     // Total trading volume for the last day
-     // The exchange rate at the moment of trading opening for the given day
-     // Currency exchange rate at the moment of trading closing for the given day
-     // Difference (in %) of the exchange rate from the moment of opening to the moment of closing of trading for the given day
-     // The minimum time interval on which the largest trading volume for the given day was recorded
-     // The minimum time interval at which the maximum rate was fixed for the given day
-     // The minimum time interval on which the minimum trading rate was fixed for the given day
+    // Currency name
+    // Total trading volume for the last day
+    // The exchange rate at the moment of trading opening for the given day
+    // Currency exchange rate at the moment of trading closing for the given day
+    // Difference (in %) of the exchange rate from the moment of opening to the moment of closing of trading for the given day
+    // The minimum time interval on which the largest trading volume for the given day was recorded
+    // The minimum time interval at which the maximum rate was fixed for the given day
+    // The minimum time interval on which the minimum trading rate was fixed for the given day
 
     df = df.groupBy("symbol").agg(
       sum("volume").as("total_volume"),
@@ -128,96 +129,50 @@ object App {
         "first_min_close_minutes_added", "first_min_close_minutes_sub",
         "first_max_volume", "first_max_close", "first_min_close")
 
-    df.show(false)
+    df
+  }
 
+  private def extract(spark: SparkSession): DataFrame = {
+    // over the past day
+    val daysToSubtract = 1;
+    val predicates = Array[String](s"timestamp between today() - $daysToSubtract and today() - ${daysToSubtract - 1}")
+
+    //var df = Utils.readTable(spark, "vw_time_series", predicates)
+    Utils.readTable(spark, "vw_time_series")
+  }
+
+  private def load(df: DataFrame): Unit = {
     val format = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss")
     val directory = format.format(Calendar.getInstance().getTime())
 
     import ObjectStorage._
-
-    if (OBJECT_STORAGE == hdfs)
-      saveToHDFS(df, directory)
-    else
-      saveToS3(df, directory)
-
-    saveToElasticSearch(df)
+    saveToObjectStorage(OBJECT_STORAGE)(df, directory)
+    saveToObjectStorage(elastic_search)(df, "task2")
   }
 
-  private def readSettings(spark: SparkSession): Unit = {
-    val settings = readTable(spark, "settings");
+  private def buildSparkSession(): SparkSession = {
+    val spark = SparkSession.builder()
+      .master("local[1]")
+      .config("es.index.auto.create", "true")
+      .config("es.mapping.date.rich", "true")
+      .config("spark.es.nodes.wan.only", "true") // for Docker
+      .appName("SparkByExample")
+      .getOrCreate()
 
-    implicit def stringToObjectStorage(objectStorage: String): ObjectStorage.Value = ObjectStorage.values.find(_.toString == objectStorage).get
+    spark.sparkContext.setLogLevel("ERROR")
 
-    import SettingKeys._
-
-    TIME_SERIES_INTERVAL = settings
-      .filter(col("key") === interval_minutes.toString)
-      .select(col("value"))
-      .first()
-      .getString(0)
-      .toInt
-
-
-    OBJECT_STORAGE = settings
-      .filter(col("key") === object_storage.toString)
-      .select(col("value"))
-      .first()
-      .getString(0)
-  }
-
-  private def configureS3(spark: SparkSession): Unit = {
+    // configure S3
     System.setProperty(SDKGlobalConfiguration.DISABLE_CERT_CHECKING_SYSTEM_PROPERTY, "true")
-
-    val s3accessKeyAws = ""
-    val s3secretKeyAws = ""
-    val connectionTimeOut = "600000"
-    val s3endPointLoc: String = "http://127.0.0.1:9010"
-
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.endpoint", s3endPointLoc)
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.access.key", s3accessKeyAws)
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.secret.key", s3secretKeyAws)
-    spark.sparkContext.hadoopConfiguration.set("fs.s3a.connection.timeout", connectionTimeOut)
+    spark.sparkContext.hadoopConfiguration.set("fs.s3a.connection.timeout", s3connectionTimeOut)
     spark.sparkContext.hadoopConfiguration.set("spark.sql.debug.maxToStringFields", "100")
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.path.style.access", "true")
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.connection.ssl.enabled", "true")
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-  }
 
-  private def saveToElasticSearch(df: DataFrame): Unit = {
-    // ElasticSearch doesn't work well with decimal
-    val result = df
-      .withColumn("opening_rate", col("opening_rate").cast(DoubleType))
-      .withColumn("closing_rate", col("closing_rate").cast(DoubleType))
-      .withColumn("percent_diff", col("percent_diff").cast(DoubleType))
-
-    result.saveToEs("task2")
-  }
-
-  private def readTable(spark: SparkSession, table: String, predicates: Array[String] = null): DataFrame = {
-    val jdbcUrl = "jdbc:clickhouse://localhost:8123/de"
-    val opts: collection.Map[String, String] = collection.Map("driver" -> "ru.yandex.clickhouse.ClickHouseDriver")
-    val ckProperties = new Properties()
-    ckProperties.put("user", "default")
-
-    if (predicates != null)
-      spark.read.options(opts).jdbc(jdbcUrl, table = table, predicates, ckProperties)
-    else
-      spark.read.options(opts).jdbc(jdbcUrl, table = table, ckProperties)
-  }
-
-  private def saveToS3(df: DataFrame, directory: String): Unit = {
-    val outputPath = s"s3a://my-s3bucket/gold/$directory.parquet"
-    df.write.mode("overwrite").parquet(outputPath)
-  }
-
-  private def saveToHDFS(df: DataFrame, directory: String): Unit = {
-    df.write.parquet(s"hdfs://localhost:9000/gold/$directory.parquet")
-  }
-
-  private def readFromHDFS(spark: SparkSession, directory: String): DataFrame = {
-    spark.read
-      .option("header", true)
-      .csv(s"hdfs://localhost:9000/bronze/$directory")
+    spark
   }
 }
