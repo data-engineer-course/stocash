@@ -40,7 +40,7 @@ https://www.alphavantage.co/
 
 ## Implementation plan
 
-The data from Alpha Vantage goes to the '/bronze' HDFS folder, where ClickHouse looks at it with its time_series table. The unique rows from this table are in the vw_time_series view, where Spark takes them from. After all the transformations, Spark puts the finished storefront in the '/gold' folder of HDFS and ElasticSearch. Various application settings are stored in the settings folder in ClickHouse.
+The data from Alpha Vantage goes to the '/bronze' HDFS folder, where ClickHouse looks at it with its time_series table. The unique rows from this table are in the vw_time_series view, where Spark takes them from. After all the transformations, Spark puts the finished storefront in the '/gold' folder of HDFS and ElasticSearch. Various application settings are stored in the settings table in ClickHouse.
 
 ![Chart1](images/diagram.drawio.png)
 

@@ -40,7 +40,7 @@ https://www.alphavantage.co/
 
 ## План реализации
 
-Данные из Alpha Vantage попадают в '/bronze' папку HDFS, где на неё смотрит ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёт Spark. После всех преобразований, готовую витрину Spark кладёт в '/gold' папку HDFS и ElasticSearch. Различные настройки для работы приложений хранятся в папке settings в ClickHouse.
+Данные из Alpha Vantage попадают в '/bronze' папку HDFS, где на неё смотрит ClickHouse своей таблицей time_series. Уникальные строки из этой таблицы находятся в представлении vw_time_series, откуда их берёт Spark. После всех преобразований, готовую витрину Spark кладёт в '/gold' папку HDFS и ElasticSearch. Различные настройки для работы приложений хранятся в таблице settings в ClickHouse.
 
 ![График1](images/diagram.drawio.png)
 
