@@ -57,7 +57,7 @@ https://www.alphavantage.co/
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных, лучше чем MapReduce.
 - [ClickHouse 22.11.2](https://clickhouse.com/docs/ru/getting-started/install/) - можно настроить на папку в HDFS как в Hive Metastore. Быстро делает выборки.
 
-*(ClickHouse пришлось перенастроить на порт 9001, потому что 9000 занят HDFS)*
+*(ClickHouse пришлось перенастроить на порт 9001 в /etc/clickhouse-server/config.xml, потому что 9000 занят HDFS)*
 
 ElasticSearch, Kibana и Grafana будут браться из [docker-compose.yml](./elasticsearch/)
 

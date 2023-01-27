@@ -51,7 +51,7 @@ The entire environment will be installed on a local or virtual machine. In my ca
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - fast data processing, better than MapReduce.
 - [ClickHouse 22.11.2](https://clickhouse.com/docs/ru/getting-started/install/) - can be set to a folder in HDFS like in Hive Metastore. Makes quick selections.
 
-*(ClickHouse had to reconfigure port 9001 because 9000 is taken by HDFS)*
+*(ClickHouse had to reconfigure port 9001 in /etc/clickhouse-server/config.xml because 9000 is taken by HDFS)*
 
 ElasticSearch, Kibana and Grafana will come from [docker-compose.yml](./elasticsearch/)
 
