@@ -1,5 +1,11 @@
 # Analysis of the currency market
 
+<div align="center">
+
+![Logo](images/logo.png)
+
+</div>
+
 ## General task
 Create an ETL process for generating data marts to analyze changes in the exchange rate.
 
