@@ -5,8 +5,8 @@ import boto3
 from subprocess import PIPE, Popen
 
 # for test
-os.environ['AWS_ACCESS_KEY_ID'] = ""
-os.environ['AWS_SECRET_ACCESS_KEY'] = ""
+os.environ['AWS_ACCESS_KEY_ID'] = "pnPnSD6URaW1IyoB"
+os.environ['AWS_SECRET_ACCESS_KEY'] = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
 
 s3 = boto3.resource('s3', endpoint_url="http://127.0.0.1:9010")
 hdfs_url = 'hdfs://localhost:9000'

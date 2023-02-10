@@ -17,8 +17,8 @@ object App {
   private var TIME_SERIES_INTERVAL = 15
   private var OBJECT_STORAGE = ObjectStorage.hdfs
 
-  private val s3accessKeyAws = ""
-  private val s3secretKeyAws = ""
+  private val s3accessKeyAws = "pnPnSD6URaW1IyoB"
+  private val s3secretKeyAws = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
   private val s3connectionTimeOut = "600000"
   private val s3endPointLoc: String = "http://127.0.0.1:9010"
 
@@ -47,7 +47,7 @@ object App {
     load(df)
   }
 
-  private def transform(source: DataFrame): DataFrame = {
+  def transform(source: DataFrame): DataFrame = {
     var df = source
 
     val windowSpec = Window.partitionBy("symbol")
@@ -79,7 +79,7 @@ object App {
 
       .drop("tmp_open", "tmp_close", "tmp_max_volume", "tmp_max_close", "tmp_min_close")
 
-    df.show()
+//    df.show()
 
     // Currency name
     // Total trading volume for the last day

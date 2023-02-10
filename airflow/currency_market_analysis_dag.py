@@ -10,7 +10,7 @@ from utils.enums import TimeSeriesInterval, SettingKeys
 from utils import db_utils as db, csv_utils as csv
 
 # for test
-os.environ["ALPHAVANTAGE_KEY"] = ""
+os.environ["ALPHAVANTAGE_KEY"] = "3W9T6S0SUX2HUMJB"
 
 time_series = TimeSeries(key=os.environ["ALPHAVANTAGE_KEY"], output_format='csv')
 
