@@ -27,7 +27,7 @@ class TestDF extends AnyFunSuite with BeforeAndAfterAll
   }
 
   override def beforeEach() {
-//    session.catalog.clearCache()
+    session.catalog.clearCache()
   }
 
   test("DFs equal") {
