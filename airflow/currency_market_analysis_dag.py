@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, date
 from airflow.models import Variable
 from airflow import DAG
@@ -11,6 +10,10 @@ from utils import db_utils as db, csv_utils as csv, hvac_utils
 
 
 alphavantage_key = hvac_utils.read_vault('ALPHAVANTAGE_KEY')
+# for test
+if not alphavantage_key:
+    alphavantage_key = "3W9T6S0SUX2HUMJB"
+
 time_series = TimeSeries(key=alphavantage_key, output_format='csv')
 
 
