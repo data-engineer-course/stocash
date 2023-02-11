@@ -56,6 +56,7 @@ The entire environment will be installed on a local or virtual machine. In my ca
 - [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - has a convenient graphical interface and the ability to write code in Python.
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - fast data processing, better than MapReduce.
 - [ClickHouse 22.11.2](https://clickhouse.com/docs/ru/getting-started/install/) - can be set to a folder in HDFS like in Hive Metastore. Makes quick selections.
+- [HashiCorp Vault 1.12.3](https://www.hashicorp.com/products/vault) - tightly controls access to secrets and encryption keys
 
 *(ClickHouse had to reconfigure port 9001 in /etc/clickhouse-server/config.xml because 9000 is taken by HDFS)*
 
@@ -135,6 +136,19 @@ After that, it will be possible to reconfigure the current **vw_time_series** vi
 
 You will also need to specify these keys in the DAG to access S3.
 
+## HashiCorp Vault
+
+Quick Start - https://developer.hashicorp.com/vault/docs/get-started/developer-qs
+
+```bash
+vault server -dev -dev-root-token-id="dev-only-token"
+
+export VAULT_ADDR='http://127.0.0.1:8200'
+
+vault kv put secret/KeyName ALPHAVANTAGE_KEY=_the_key_
+
+vault kv get -field=ALPHAVANTAGE_KEY secret/KeyName
+```
 
 ## Airflow
 
@@ -143,6 +157,7 @@ You will also need to specify these keys in the DAG to access S3.
 - apache-airflow
 - alpha_vantage
 - boto3
+- hvac
 
 <details>
   <summary>Initialization</summary>
@@ -159,9 +174,6 @@ PYTHON_VERSION="$(python --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
 CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
 # For example: https://raw.githubusercontent.com/apache/airflow/constraints-2.5.0/constraints-3.7.txt
 pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
-
-# set your key
-export ALPHAVANTAGE_KEY=...
 
 # The Standalone command will initialise the database, make a user,
 # and start all components for you.

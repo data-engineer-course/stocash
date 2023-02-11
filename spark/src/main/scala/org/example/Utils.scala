@@ -5,6 +5,11 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.DoubleType
 import org.elasticsearch.spark.sql.sparkDatasetFunctions
 
+import org.springframework.vault.authentication.TokenAuthentication
+import org.springframework.vault.client.VaultEndpoint
+import org.springframework.vault.support.Versioned
+import org.springframework.vault.core.VaultTemplate
+
 import java.util.Properties
 
 object Utils {
@@ -67,5 +72,23 @@ object Utils {
     spark.read
       .option("header", true)
       .csv(s"$hdfsUrl/bronze/$directory")
+  }
+
+  def readVault(key: String): String = {
+    val vaultEndpoint = new VaultEndpoint
+
+    vaultEndpoint.setHost("127.0.0.1")
+    vaultEndpoint.setPort(8200)
+    vaultEndpoint.setScheme("http")
+
+    val vaultTemplate = new VaultTemplate(vaultEndpoint, new TokenAuthentication("dev-only-token"))
+
+    val readResponse = vaultTemplate.opsForVersionedKeyValue("secret").get("KeyName")
+
+    var password = ""
+    if (readResponse != null && readResponse.hasData)
+      password = readResponse.getData.get("ALPHAVANTAGE_KEY").asInstanceOf[String]
+
+    password
   }
 }

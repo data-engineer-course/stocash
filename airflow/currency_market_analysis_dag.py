@@ -7,12 +7,11 @@ from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.utils.trigger_rule import TriggerRule
 from alpha_vantage.timeseries import TimeSeries
 from utils.enums import TimeSeriesInterval, SettingKeys
-from utils import db_utils as db, csv_utils as csv
+from utils import db_utils as db, csv_utils as csv, hvac_utils
 
-# for test
-os.environ["ALPHAVANTAGE_KEY"] = "3W9T6S0SUX2HUMJB"
 
-time_series = TimeSeries(key=os.environ["ALPHAVANTAGE_KEY"], output_format='csv')
+alphavantage_key = hvac_utils.read_vault('ALPHAVANTAGE_KEY')
+time_series = TimeSeries(key=alphavantage_key, output_format='csv')
 
 
 def python_branch():

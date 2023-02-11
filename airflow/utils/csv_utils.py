@@ -3,10 +3,18 @@ import csv
 import os
 import boto3
 from subprocess import PIPE, Popen
+from utils import hvac_utils
+
+aws_access_key_id = hvac_utils.read_vault('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = hvac_utils.read_vault('AWS_SECRET_ACCESS_KEY')
 
 # for test
-os.environ['AWS_ACCESS_KEY_ID'] = "pnPnSD6URaW1IyoB"
-os.environ['AWS_SECRET_ACCESS_KEY'] = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
+if not aws_access_key_id:
+    aws_access_key_id = "pnPnSD6URaW1IyoB"
+    aws_secret_access_key = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
+
+os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
+os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
 
 s3 = boto3.resource('s3', endpoint_url="http://127.0.0.1:9010")
 hdfs_url = 'hdfs://localhost:9000'

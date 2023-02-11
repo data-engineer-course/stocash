@@ -17,12 +17,19 @@ object App {
   private var TIME_SERIES_INTERVAL = 15
   private var OBJECT_STORAGE = ObjectStorage.hdfs
 
-  private val s3accessKeyAws = "pnPnSD6URaW1IyoB"
-  private val s3secretKeyAws = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
+  private var s3accessKeyAws: String = _
+  private var s3secretKeyAws: String = _
   private val s3connectionTimeOut = "600000"
   private val s3endPointLoc: String = "http://127.0.0.1:9010"
 
   def main(args: Array[String]): Unit = {
+    s3accessKeyAws = Utils.readVault("AWS_ACCESS_KEY_ID")
+    s3secretKeyAws = Utils.readVault("AWS_SECRET_ACCESS_KEY")
+
+    if (s3accessKeyAws == null || s3accessKeyAws.isEmpty) {
+      s3accessKeyAws = "pnPnSD6URaW1IyoB"
+      s3secretKeyAws = "Vqz6yaOgvdfOw4RmJntFH1ksgqNK3C8v"
+    }
 
     val spark = buildSparkSession()
 
@@ -79,7 +86,7 @@ object App {
 
       .drop("tmp_open", "tmp_close", "tmp_max_volume", "tmp_max_close", "tmp_min_close")
 
-//    df.show()
+    //    df.show()
 
     // Currency name
     // Total trading volume for the last day

@@ -62,6 +62,7 @@ https://www.alphavantage.co/
 - [Airflow 2.5.0](https://airflow.apache.org/docs/apache-airflow/stable/start.html) - имеет удобный графический интерфейс и возможность писать код на Python.
 - [Spark 3.3.1](https://spark.apache.org/downloads.html) - быстрая обработка данных, лучше чем MapReduce.
 - [ClickHouse 22.11.2](https://clickhouse.com/docs/ru/getting-started/install/) - можно настроить на папку в HDFS как в Hive Metastore. Быстро делает выборки.
+- [HashiCorp Vault 1.12.3](https://www.hashicorp.com/products/vault) - безопасный способ хранения секретов
 
 *(ClickHouse пришлось перенастроить на порт 9001 в /etc/clickhouse-server/config.xml, потому что 9000 занят HDFS)*
 
@@ -142,6 +143,23 @@ hdfs dfsadmin -safemode leave
 
 Так же в DAG нужно будет указать эти ключи для доступа к S3.
 
+## HashiCorp Vault
+
+Quick Start - https://developer.hashicorp.com/vault/docs/get-started/developer-qs
+
+```bash
+vault server -dev -dev-root-token-id="dev-only-token"
+
+export VAULT_ADDR='http://127.0.0.1:8200'
+
+# store
+vault kv put secret/KeyName ALPHAVANTAGE_KEY=...
+vault kv put secret/KeyName AWS_ACCESS_KEY_ID=...
+vault kv put secret/KeyName AWS_SECRET_ACCESS_KEY=...
+
+# check
+vault kv get -field=ALPHAVANTAGE_KEY secret/KeyName
+```
 
 ## Airflow
 
@@ -150,6 +168,7 @@ hdfs dfsadmin -safemode leave
 - apache-airflow
 - alpha_vantage
 - boto3
+- hvac
 
 <details>
   <summary>Инициализация</summary>
@@ -166,9 +185,6 @@ PYTHON_VERSION="$(python --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
 CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
 # For example: https://raw.githubusercontent.com/apache/airflow/constraints-2.5.0/constraints-3.7.txt
 pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
-
-# set your key
-export ALPHAVANTAGE_KEY=...
 
 # The Standalone command will initialise the database, make a user,
 # and start all components for you.
