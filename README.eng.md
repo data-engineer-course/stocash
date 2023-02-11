@@ -195,6 +195,7 @@ As a result, a project was created with the following structure:
 ├── docs            # documentation, presentation
 ├── elasticsearch   # scripts for elasticsearch
 ├── images          # diagrams, pictures
+├── mapreduce       # mapreduce example data mart
 ├── s3              # scripts for S3
 └── spark           # source code for Spark
 ```

@@ -206,6 +206,7 @@ airflow standalone
 ├── docs            # документация, презентация
 ├── elasticsearch   # скрипты для elasticsearch
 ├── images          # диаграммы, картинки
+├── mapreduce       # пример витрины с mapreduce
 ├── s3              # скрипты для S3
 └── spark           # исходный код для Spark
 ```
