@@ -36,4 +36,5 @@ jobs:
     - name: pwd
       run: pwd
     - name: Run tests
+      working-directory: ./spark
       run: sbt test
