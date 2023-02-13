@@ -33,5 +33,7 @@ jobs:
     - name: cd spark
       shell: bash
       run: cd /home/runner/work/Stocash/Stocash/spark
+    - name: pwd
+      run: pwd
     - name: Run tests
       run: sbt test
