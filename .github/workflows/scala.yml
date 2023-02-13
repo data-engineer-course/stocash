@@ -27,8 +27,11 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
         cache: 'sbt'
+    - name: ls
+      shell: bash
+      run: ls /home/runner/work/Stocash/Stocash
     - name: cd spark
       shell: bash
-      run: cd ./spark
+      run: cd /home/runner/work/Stocash/Stocash/spark
     - name: Run tests
       run: sbt test
