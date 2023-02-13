@@ -27,5 +27,8 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
         cache: 'sbt'
+    - name: cd spark
+      shell: bash
+      run: cd ./spark
     - name: Run tests
       run: sbt test
