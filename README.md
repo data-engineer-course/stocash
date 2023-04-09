@@ -42,8 +42,6 @@
 https://www.alphavantage.co/
 </details>
 
----
-
 ## План реализации
 
 Данные из Alpha Vantage попадают в '/bronze' папку HDFS, где на неё смотрит ClickHouse своей таблицей time_series.
